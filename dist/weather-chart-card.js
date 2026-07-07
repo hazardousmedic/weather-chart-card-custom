@@ -18427,12 +18427,6 @@ drawChart({ config, language, weather, forecastItems } = this) {
   }
   const data = this.computeForecastData();
 
-  if (config.forecast.precipitation_type !== 'probability' && lengthUnit !== 'km') {
-    data.precip = data.precip.map(function (v) {
-      return (typeof v === 'number' ? v / 25.4 : v);
-    });
-  }
-
   var style = getComputedStyle(document.body);
   var backgroundColor = style.getPropertyValue('--card-background-color');
   var textColor = style.getPropertyValue('--primary-text-color');
@@ -18735,7 +18729,11 @@ computeForecastData({ config, forecastItems } = this) {
     if (config.forecast.precipitation_type === 'probability') {
       precip.push(d.precipitation_probability);
     } else {
-      precip.push(d.precipitation);
+      var precipValue = d.precipitation;
+      if (typeof precipValue === 'number' && this._hass.config.unit_system.length !== 'km') {
+        precipValue = precipValue / 25.4;
+      }
+      precip.push(precipValue);
     }
   }
 
