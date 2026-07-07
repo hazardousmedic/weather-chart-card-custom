@@ -19106,6 +19106,7 @@ renderAttributes({ config, humidity, pressure, windSpeed, windDirection, sun, la
   const showVisibility = config.show_visibility == true;
   const showRain = config.show_rain == true;
   const dRainUnit = config.rain_unit || rainUnit || 'mm';
+  const dRain = typeof rain === 'string' || typeof rain === 'number' ? parseFloat(rain).toFixed(2) : rain;
 
 return x`
     <div class="attributes">
@@ -19124,7 +19125,7 @@ return x`
             <ha-icon icon="hass:eye"></ha-icon> ${visibility} ${this.weather.attributes.visibility_unit} <br>
           ` : ''}
           ${showRain && rain !== undefined ? x`
-            <ha-icon icon="hass:weather-rainy"></ha-icon> ${rain} ${dRainUnit}
+            <ha-icon icon="hass:weather-rainy"></ha-icon> ${dRain} ${dRainUnit}
           ` : ''}
         </div>
       ` : ''}
