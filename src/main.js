@@ -157,6 +157,7 @@ set hass(hass) {
     this.wind_gust_speed = this.config.wind_gust_speed ? hass.states[this.config.wind_gust_speed].state : this.weather.attributes.wind_gust_speed;
     this.visibility = this.config.visibility ? hass.states[this.config.visibility].state : this.weather.attributes.visibility;
     this.rain = this.config.rain ? hass.states[this.config.rain].state : undefined;
+    this.rainUnit = this.config.rain && hass.states[this.config.rain] ? hass.states[this.config.rain].attributes.unit_of_measurement : undefined;
 
     if (this.config.winddir && hass.states[this.config.winddir] && hass.states[this.config.winddir].state !== undefined) {
       this.windDirection = parseFloat(hass.states[this.config.winddir].state);
@@ -1090,7 +1091,7 @@ renderMain({ config, sun, weather, temperature, feels_like, description } = this
   `;
 }
 
-renderAttributes({ config, humidity, pressure, windSpeed, windDirection, sun, language, uv_index, dew_point, wind_gust_speed, visibility, rain } = this) {
+renderAttributes({ config, humidity, pressure, windSpeed, windDirection, sun, language, uv_index, dew_point, wind_gust_speed, visibility, rain, rainUnit } = this) {
   let dWindSpeed = windSpeed;
   let dPressure = pressure;
 
@@ -1159,7 +1160,7 @@ renderAttributes({ config, humidity, pressure, windSpeed, windDirection, sun, la
   const showWindgustspeed = config.show_wind_gust_speed == true;
   const showVisibility = config.show_visibility == true;
   const showRain = config.show_rain == true;
-  const rainUnit = config.rain_unit || (this.weather && this.weather.attributes.precipitation_unit) || 'mm';
+  const dRainUnit = config.rain_unit || rainUnit || 'mm';
 
 return html`
     <div class="attributes">
@@ -1178,7 +1179,7 @@ return html`
             <ha-icon icon="hass:eye"></ha-icon> ${visibility} ${this.weather.attributes.visibility_unit} <br>
           ` : ''}
           ${showRain && rain !== undefined ? html`
-            <ha-icon icon="hass:weather-rainy"></ha-icon> ${rain} ${rainUnit}
+            <ha-icon icon="hass:weather-rainy"></ha-icon> ${rain} ${dRainUnit}
           ` : ''}
         </div>
       ` : ''}
