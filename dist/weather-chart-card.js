@@ -18426,6 +18426,12 @@ drawChart({ config, language, weather, forecastItems } = this) {
   }
   const data = this.computeForecastData();
 
+  if (config.forecast.precipitation_type !== 'probability' && lengthUnit !== 'km') {
+    data.precip = data.precip.map(function (v) {
+      return (typeof v === 'number' ? v / 25.4 : v);
+    });
+  }
+
   var style = getComputedStyle(document.body);
   var backgroundColor = style.getPropertyValue('--card-background-color');
   var textColor = style.getPropertyValue('--primary-text-color');
@@ -18497,12 +18503,12 @@ drawChart({ config, language, weather, forecastItems } = this) {
         let formattedValue;
         if (precipitationType === 'rainfall') {
           if (probability !== undefined && probability !== null && config.forecast.show_probability) {
-	    formattedValue = `${rainfall > 9 ? Math.round(rainfall) : rainfall.toFixed(1)} ${precipUnit}\n${Math.round(probability)}%`;
+	    formattedValue = `${rainfall >= 10 ? Math.round(rainfall) : (rainfall < 1 ? rainfall.toFixed(2) : rainfall.toFixed(1))} ${precipUnit}\n${Math.round(probability)}%`;
           } else {
-            formattedValue = `${rainfall > 9 ? Math.round(rainfall) : rainfall.toFixed(1)} ${precipUnit}`;
+            formattedValue = `${rainfall >= 10 ? Math.round(rainfall) : (rainfall < 1 ? rainfall.toFixed(2) : rainfall.toFixed(1))} ${precipUnit}`;
           }
         } else {
-          formattedValue = `${rainfall > 9 ? Math.round(rainfall) : rainfall.toFixed(1)} ${precipUnit}`;
+          formattedValue = `${rainfall >= 10 ? Math.round(rainfall) : (rainfall < 1 ? rainfall.toFixed(2) : rainfall.toFixed(1))} ${precipUnit}`;
         }
 
         formattedValue = formattedValue.replace('\n', '\n\n');
