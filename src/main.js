@@ -43,6 +43,7 @@ static getStubConfig(hass, unusedEntities, allEntities) {
     show_dew_point: false,
     show_wind_gust_speed: false,
     show_visibility: false,
+    show_rain: false,
     show_last_changed: false,
     use_12hour_format: false,
     icons_size: 25,
@@ -95,6 +96,7 @@ setConfig(config) {
     show_dew_point: false,
     show_wind_gust_speed: false,
     show_visibility: false,
+    show_rain: false,
     show_last_changed: false,
     show_description: false,
     ...config,
@@ -154,6 +156,7 @@ set hass(hass) {
     this.dew_point = this.config.dew_point ? hass.states[this.config.dew_point].state : this.weather.attributes.dew_point;
     this.wind_gust_speed = this.config.wind_gust_speed ? hass.states[this.config.wind_gust_speed].state : this.weather.attributes.wind_gust_speed;
     this.visibility = this.config.visibility ? hass.states[this.config.visibility].state : this.weather.attributes.visibility;
+    this.rain = this.config.rain ? hass.states[this.config.rain].state : undefined;
 
     if (this.config.winddir && hass.states[this.config.winddir] && hass.states[this.config.winddir].state !== undefined) {
       this.windDirection = parseFloat(hass.states[this.config.winddir].state);
@@ -1081,7 +1084,7 @@ renderMain({ config, sun, weather, temperature, feels_like, description } = this
   `;
 }
 
-renderAttributes({ config, humidity, pressure, windSpeed, windDirection, sun, language, uv_index, dew_point, wind_gust_speed, visibility } = this) {
+renderAttributes({ config, humidity, pressure, windSpeed, windDirection, sun, language, uv_index, dew_point, wind_gust_speed, visibility, rain } = this) {
   let dWindSpeed = windSpeed;
   let dPressure = pressure;
 
@@ -1149,10 +1152,12 @@ renderAttributes({ config, humidity, pressure, windSpeed, windDirection, sun, la
   const showDewpoint = config.show_dew_point == true;
   const showWindgustspeed = config.show_wind_gust_speed == true;
   const showVisibility = config.show_visibility == true;
+  const showRain = config.show_rain == true;
+  const rainUnit = config.rain_unit || (this.weather && this.weather.attributes.precipitation_unit) || 'mm';
 
 return html`
     <div class="attributes">
-      ${((showHumidity && humidity !== undefined) || (showPressure && dPressure !== undefined) || (showDewpoint && dew_point !== undefined) || (showVisibility && visibility !== undefined)) ? html`
+      ${((showHumidity && humidity !== undefined) || (showPressure && dPressure !== undefined) || (showDewpoint && dew_point !== undefined) || (showVisibility && visibility !== undefined) || (showRain && rain !== undefined)) ? html`
         <div>
           ${showHumidity && humidity !== undefined ? html`
             <ha-icon icon="hass:water-percent"></ha-icon> ${humidity} %<br>
@@ -1164,7 +1169,10 @@ return html`
             <ha-icon icon="hass:thermometer-water"></ha-icon> ${dew_point} ${this.weather.attributes.temperature_unit} <br>
           ` : ''}
           ${showVisibility && visibility !== undefined ? html`
-            <ha-icon icon="hass:eye"></ha-icon> ${visibility} ${this.weather.attributes.visibility_unit}
+            <ha-icon icon="hass:eye"></ha-icon> ${visibility} ${this.weather.attributes.visibility_unit} <br>
+          ` : ''}
+          ${showRain && rain !== undefined ? html`
+            <ha-icon icon="hass:weather-rainy"></ha-icon> ${rain} ${rainUnit}
           ` : ''}
         </div>
       ` : ''}
