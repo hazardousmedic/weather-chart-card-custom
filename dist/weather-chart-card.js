@@ -17987,6 +17987,7 @@ static getStubConfig(hass, unusedEntities, allEntities) {
     show_wind_speed: true,
     show_sun: true,
     show_feels_like: false,
+    show_temp_secondary: false,
     show_dew_point: false,
     show_wind_gust_speed: false,
     show_visibility: false,
@@ -18040,6 +18041,7 @@ setConfig(config) {
     time_size: 26,
     day_date_size: 15,
     show_feels_like: false,
+    show_temp_secondary: false,
     show_dew_point: false,
     show_wind_gust_speed: false,
     show_visibility: false,
@@ -18142,6 +18144,18 @@ subscribeForecastEvents() {
     forecast_type: isHourly ? 'hourly' : 'daily',
     entity_id: this.config.entity,
   });
+
+  if (!this.forecastRefreshTimer) {
+    this.forecastRefreshTimer = setInterval(() => this.refreshForecastSubscription(), 15 * 60 * 1000);
+  }
+}
+
+refreshForecastSubscription() {
+  if (this.forecastSubscriber) {
+    this.forecastSubscriber.then((unsub) => unsub()).catch(() => {});
+  }
+  this.forecastSubscriber = null;
+  this.subscribeForecastEvents();
 }
 
   supportsFeature(feature) {
@@ -18152,6 +18166,7 @@ subscribeForecastEvents() {
     super();
     this.resizeObserver = null;
     this.resizeInitialized = false;
+    this.forecastRefreshTimer = null;
   }
 
   connectedCallback() {
@@ -18173,6 +18188,10 @@ subscribeForecastEvents() {
     this.detachResizeObserver();
     if (this.forecastSubscriber) {
       this.forecastSubscriber.then((unsub) => unsub());
+    }
+    if (this.forecastRefreshTimer) {
+      clearInterval(this.forecastRefreshTimer);
+      this.forecastRefreshTimer = null;
     }
   }
 
@@ -18904,6 +18923,17 @@ updateChart({ forecasts, forecastChart } = this) {
           margin-top: 5px;
           font-weight: 400;
         }
+        .main-secondary {
+          margin-left: 24px;
+          margin-inline-start: 24px;
+          margin-inline-end: initial;
+          padding-left: 24px;
+          padding-inline-start: 24px;
+          padding-inline-end: initial;
+          border-left: 1px solid var(--divider-color);
+          font-size: 0.55em;
+          opacity: 0.85;
+        }
         .main .description {
 	  font-style: italic;
           font-size: 13px;
@@ -18955,6 +18985,22 @@ renderMain({ config, sun, weather, temperature, feels_like, description } = this
   let roundedFeelsLike = parseFloat(feels_like);
   if (!isNaN(roundedFeelsLike) && roundedFeelsLike % 1 !== 0) {
     roundedFeelsLike = Math.round(roundedFeelsLike * 10) / 10;
+  }
+
+  const showTempSecondary = config.show_temp_secondary;
+  const primaryUnit = this.getUnit('temperature');
+  const toCelsius = (val) => primaryUnit === '°F' ? (val - 32) * 5 / 9 : val;
+
+  let roundedTemperatureSecondary = null;
+  const parsedTempForSecondary = parseFloat(temperature);
+  if (showTempSecondary && !isNaN(parsedTempForSecondary)) {
+    roundedTemperatureSecondary = Math.round(toCelsius(parsedTempForSecondary));
+  }
+
+  let roundedFeelsLikeSecondary = null;
+  const parsedFeelsLikeForSecondary = parseFloat(feels_like);
+  if (showTempSecondary && !isNaN(parsedFeelsLikeForSecondary)) {
+    roundedFeelsLikeSecondary = Math.round(toCelsius(parsedFeelsLikeForSecondary));
   }
 
   const iconHtml = config.animated_icons || config.icons
@@ -19032,6 +19078,17 @@ renderMain({ config, sun, weather, temperature, feels_like, description } = this
           </div>
         ` : ''}
       </div>
+      ${showTempSecondary && roundedTemperatureSecondary !== null ? x`
+        <div class="main-secondary">
+          ${roundedTemperatureSecondary}<span>°C</span>
+          ${showFeelsLike && roundedFeelsLikeSecondary ? x`
+            <div class="feels-like">
+              ${this.ll('feelsLike')}
+              ${roundedFeelsLikeSecondary}°C
+            </div>
+          ` : ''}
+        </div>
+      ` : ''}
     </div>
   `;
 }
